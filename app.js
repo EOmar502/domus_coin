@@ -1,5 +1,5 @@
 // 🔐 SUPABASE CONFIG
-const supabaseUrl = 'https://kmaydnzeiyynbphudntj.supabase.co/rest/v1/';
+const supabaseUrl = 'https://kmaydnzeiyynbphudntj.supabase.co';
 const supabaseKey = 'sb_publishable_lV7QSsgPX_5nJh0ksO83ww_7G9szgjj';
 
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
