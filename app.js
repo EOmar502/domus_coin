@@ -1,6 +1,6 @@
 // 🔐 SUPABASE CONFIG
-const supabaseUrl = 'https://TU_URL.supabase.co';
-const supabaseKey = 'TU_PUBLIC_KEY';
+const supabaseUrl = 'https://kmaydnzeiyynbphudntj.supabase.co/rest/v1/';
+const supabaseKey = 'sb_publishable_lV7QSsgPX_5nJh0ksO83ww_7G9szgjj';
 
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
