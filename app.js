@@ -29,17 +29,16 @@ function renderAgua(cont) {
   cont.innerHTML = `
     <h2>💧 Agua</h2>
 
-    <label>Mes</label>
-    <input id="mes" placeholder="Ej: Mayo">
+    <label for="mes">Mes y año</label>
+    <input type="month" id="mes">
 
-    <label>Consumo (m³)</label>
-    <input id="consumo" type="number">
+    <label for="consumo">Consumo (m³)</label>
+    <input id="consumo" type="number" placeholder="Ej: 15">
 
-    <label>Total ($)</label>
-    <input id="total" type="number">
+    <label for="total">Total ($)</label>
+    <input id="total" type="number" placeholder="Ej: 350">
 
     <button onclick="guardarAgua()">💾 Guardar</button>
-
   `;
 }
 
@@ -48,32 +47,61 @@ async function guardarAgua() {
   const consumo = parseFloat(document.getElementById('consumo').value);
   const total = parseFloat(document.getElementById('total').value);
 
-  // 1. Insertar gasto
+  // Validaciones
+  if (!mes) {
+    alert("⚠️ Selecciona mes y año");
+    return;
+  }
+
+  if (!consumo || !total) {
+    alert("⚠️ Completa todos los campos");
+    return;
+  }
+
+  // Separar año y mes
+  const [anio, mesNum] = mes.split("-");
+
+  // Convertir a nombre
+  const nombresMes = [
+    "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+    "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+  ];
+
+  const nombreMes = nombresMes[parseInt(mesNum) - 1];
+
+  // 1. Guardar gasto general
   const { data: gasto, error: err1 } = await supabaseClient
     .from('gastos')
     .insert([{
       tipo: 'agua',
-      fecha: new Date(),
+      fecha: `${anio}-${mesNum}-01`,
       total,
       usuario_id
     }])
     .select()
     .single();
 
-  if (err1) return alert(err1.message);
+  if (err1) {
+    alert(err1.message);
+    return;
+  }
 
-  // 2. Detalle agua
+  // 2. Guardar detalle agua
   const { error: err2 } = await supabaseClient
     .from('agua')
     .insert([{
       gasto_id: gasto.id,
       consumo_m3: consumo,
-      mes
+      mes: `${nombreMes} ${anio}`
     }]);
 
-  if (err2) alert(err2.message);
-  else alert("✅ Guardado correctamente");
+  if (err2) {
+    alert(err2.message);
+  } else {
+    alert("✅ Agua guardada correctamente");
+  }
 }
+
 
 // ⚡ Energía
 
