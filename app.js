@@ -29,7 +29,7 @@ function renderAgua(cont) {
   cont.innerHTML = `
     <h2>💧 Agua</h2>
 
-    <label for="mes">Mes y año</label>
+    <label for="mes">Mes y Año</label>
     <input type="month" id="mes">
 
     <label for="consumo">Consumo (m³)</label>
