@@ -33,10 +33,10 @@ function renderAgua(cont) {
     <input type="month" id="mes">
 
     <label for="consumo">Consumo (m³)</label>
-    <input id="consumo" type="number" placeholder="Ej: 15">
+    <input id="consumo" type="number" placeholder="Ej: 15.0">
 
     <label for="total">Total ($)</label>
-    <input id="total" type="number" placeholder="Ej: 350">
+    <input id="total" type="number" placeholder="Ej: 350.00">
 
     <button onclick="guardarAgua()">💾 Guardar</button>
   `;
