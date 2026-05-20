@@ -260,16 +260,19 @@ async function renderDashboard(cont) {
 
 // Prueba de conexión a base de datos
 async function testDB() {
+  console.log("🔍 Probando conexión...");
+
   const { data, error } = await supabaseClient
     .from('gastos')
     .select('*');
 
   if (error) {
-    console.error(error);
-    alert("❌ Error conexión");
+    console.error("❌ ERROR:", error);
+    alert("Error: " + error.message);
   } else {
-    console.log(data);
-    alert("✅ Conectado correctamente");
+    console.log("✅ DATOS:", data);
+    alert("Conexión exitosa ✅");
   }
 }
+
 
