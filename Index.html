@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Control de Gastos</title>
+
+  <!-- Telegram Web App -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+</head>
+<body>
+
+  <h1>🏠 Control de Gastos</h1>
+
+  <!-- MENÚ -->
+  <div id="menu">
+    <button onclick="mostrarSeccion('agua')">💧 Agua</button>
+    <button onclick="mostrarSeccion('energia')">⚡ Energía</button>
+    <button onclick="mostrarSeccion('gasolina')">⛽ Gasolina</button>
+    <button onclick="mostrarSeccion('vehiculos')">🚗 Vehículos</button>
+    <button onclick="mostrarSeccion('dashboard')">📊 Dashboard</button>
+  </div>
+
+  <hr>
+
+  <!-- CONTENEDOR DINÁMICO -->
+  <div id="contenido"></div>
+
+  <script src="app.js"></script>
+
+</body>
+</html>
