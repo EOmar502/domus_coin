@@ -29,11 +29,17 @@ function renderAgua(cont) {
   cont.innerHTML = `
     <h2>💧 Agua</h2>
 
-    <input id="mes" placeholder="Mes">
-    <input id="consumo" placeholder="Consumo m3" type="number">
-    <input id="total" placeholder="Total $" type="number">
+    <label>Mes</label>
+    <input id="mes" placeholder="Ej: Mayo">
 
-    <button onclick="guardarAgua()">Guardar</button>
+    <label>Consumo (m³)</label>
+    <input id="consumo" type="number">
+
+    <label>Total ($)</label>
+    <input id="total" type="number">
+
+    <button onclick="guardarAgua()">💾 Guardar</button>
+
   `;
 }
 
