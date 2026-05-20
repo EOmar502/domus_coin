@@ -257,3 +257,19 @@ async function renderDashboard(cont) {
 
   cont.innerHTML = html;
 }
+
+// Prueba de conexión a base de datos
+async function testDB() {
+  const { data, error } = await supabaseClient
+    .from('gastos')
+    .select('*');
+
+  if (error) {
+    console.error(error);
+    alert("❌ Error conexión");
+  } else {
+    console.log(data);
+    alert("✅ Conectado correctamente");
+  }
+}
+
