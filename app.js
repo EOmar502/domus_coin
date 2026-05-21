@@ -353,7 +353,10 @@ async function cargarGrafica() {
 function procesarDatosGrafica(data) {
 
   const meses = {};
-  
+  let totalAgua = 0;
+  let totalEnergia = 0;
+  let totalGasolina = 0;
+
   data.forEach(g => {
     const fecha = new Date(g.fecha);
 
@@ -372,7 +375,14 @@ function procesarDatosGrafica(data) {
     }
 
     meses[clave][g.tipo] += parseFloat(g.total);
+
+    // ✅ ACUMULADOS
+    if (g.tipo === 'agua') totalAgua += parseFloat(g.total);
+    if (g.tipo === 'energia') totalEnergia += parseFloat(g.total);
+    if (g.tipo === 'gasolina') totalGasolina += parseFloat(g.total);
   });
+
+  mostrarTotales(totalAgua, totalEnergia, totalGasolina);
 
   const ordenados = Object.keys(meses).sort((a, b) => new Date(a) - new Date(b));
 
@@ -383,6 +393,7 @@ function procesarDatosGrafica(data) {
 
   crearGrafica(labels, agua, energia, gasolina);
 }
+
 
 // Crear la gráfica
 function crearGrafica(labels, agua, energia, gasolina) {
@@ -452,6 +463,8 @@ async function renderDashboard(cont) {
     <label>Año</label>
     <select id="filtroAnio"></select>
 
+    <div id="resumenTotales" style="display:flex; gap:10px; margin:15px 0;"></div>
+
     <canvas id="grafica" height="200"></canvas>
   `;
 
@@ -509,6 +522,29 @@ async function cargarGrafica() {
   procesarDatosGrafica(filtrados);
 }
 
+// Mostrar Totales
+
+function mostrarTotales(agua, energia, gasolina) {
+
+  const cont = document.getElementById('resumenTotales');
+
+  cont.innerHTML = `
+    <div style="flex:1; background:#e0f7fa; padding:10px; border-radius:10px; text-align:center;">
+      <div>💧 Agua</div>
+      <strong>$${agua.toFixed(2)}</strong>
+    </div>
+
+    <div style="flex:1; background:#fff3e0; padding:10px; border-radius:10px; text-align:center;">
+      <div>⚡ Energía</div>
+      <strong>$${energia.toFixed(2)}</strong>
+    </div>
+
+    <div style="flex:1; background:#e8f5e9; padding:10px; border-radius:10px; text-align:center;">
+      <div>⛽ Gasolina</div>
+      <strong>$${gasolina.toFixed(2)}</strong>
+    </div>
+  `;
+}
 
 // Prueba de conexión a base de datos
 async function testDB() {
