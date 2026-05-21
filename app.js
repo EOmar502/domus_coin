@@ -12,6 +12,16 @@ const user = tg.initDataUnsafe?.user || null;
 
 const usuario_id = user ? user.id : 'demo_user';
 
+// Consulta
+const mes = document.getElementById('mes').value;
+
+if (!mes) {
+  alert("⚠️ Selecciona mes");
+  return;
+}
+
+const [anio, mesNum] = mes.split("-");
+
 // Limpiar formularios
 
 function limpiarFormulario(containerId) {
@@ -167,23 +177,37 @@ function calcularConsumo() {
 
 async function guardarEnergia() {
 
-  const periodo = document.getElementById('periodo').value;
+  const mes = document.getElementById('mes').value;
   const lectura_anterior = parseFloat(document.getElementById('lectura_anterior').value);
   const lectura_actual = parseFloat(document.getElementById('lectura_actual').value);
-  const consumo = lectura_actual - lectura_anterior;
   const total = parseFloat(document.getElementById('total_energia').value);
 
-  if (!periodo || !lectura_anterior || !lectura_actual || !total) {
+  if (!mes) {
+    alert("⚠️ Selecciona mes");
+    return;
+  }
+
+  if (!lectura_anterior || !lectura_actual || !total) {
     alert("⚠️ Completa todos los campos");
     return;
   }
 
   if (lectura_actual < lectura_anterior) {
-    alert("❌ La lectura actual no puede ser menor a la anterior");
+    alert("❌ Lectura actual menor a la anterior");
     return;
   }
 
-  // 1️⃣ Insert en gastos
+  const [anio, mesNum] = mes.split("-");
+
+  const nombresMes = [
+    "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+    "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+  ];
+
+  const nombreMes = nombresMes[parseInt(mesNum) - 1];
+  const consumo = lectura_actual - lectura_anterior;
+
+  // 1. Insert en gastos
   const { data: gasto, error: err1 } = await supabaseClient
     .from('gastos')
     .insert([{
@@ -200,13 +224,13 @@ async function guardarEnergia() {
     return;
   }
 
-  // 2️⃣ Insert en energia
+  // 2. Insert en energía
   const { error: err2 } = await supabaseClient
     .from('energia')
     .insert([{
       gasto_id: gasto.id,
       consumo_kwh: consumo,
-      periodo: `${nombreMes} ${anio}`
+      periodo: `${nombreMes} ${anio}`,
       lectura_anterior,
       lectura_actual
     }]);
