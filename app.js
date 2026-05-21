@@ -257,6 +257,7 @@ function crearDetalle(labels, consumo, costo, unidad) {
         y1:{position:'left'},
         y2:{position:'right',
           ticks:{callback:v=>formatoMoneda(v)}
+        }
       }
     }
   });
