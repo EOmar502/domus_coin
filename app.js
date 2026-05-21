@@ -11,6 +11,7 @@ tg.expand();
 const user = tg.initDataUnsafe?.user || null;
 
 const usuario_id = user ? user.id : 'demo_user';
+
 // Limpiar formularios
 
 function limpiarFormulario(containerId) {
@@ -28,58 +29,6 @@ function limpiarFormulario(containerId) {
     }
   });
 }
-
-// Selector de calendario
-function abrirModalMes() {
-  document.getElementById('modalMes').style.display = 'flex';
-}
-
-function cerrarModal() {
-  document.getElementById('modalMes').style.display = 'none';
-}
-
-function cargarPickers() {
-  const meses = [
-    "Ene","Feb","Mar","Abr","May","Jun",
-    "Jul","Ago","Sep","Oct","Nov","Dic"
-  ];
-
-  const mesSelect = document.getElementById('mesPicker');
-  const anioSelect = document.getElementById('anioPicker');
-
-  mesSelect.innerHTML = '';
-  anioSelect.innerHTML = '';
-
-  meses.forEach((m, i) => {
-    mesSelect.innerHTML += `<option value="${i+1}">${m}</option>`;
-  });
-
-  const anioActual = new Date().getFullYear();
-
-  for (let i = anioActual - 2; i <= anioActual + 2; i++) {
-    anioSelect.innerHTML += `<option value="${i}">${i}</option>`;
-  }
-}
-
-function establecerMes() {
-  const mes = document.getElementById('mesPicker').value;
-  const anio = document.getElementById('anioPicker').value;
-
-  const valor = `${anio}-${String(mes).padStart(2, '0')}`;
-
-  document.getElementById('mes').value = valor;
-
-  cerrarModal();
-}
-
-function limpiarMes() {
-  document.getElementById('mes').value = '';
-}
-
-// 
-window.onload = () => {
-  cargarPickers();
-};
 
 // Navegación
 function mostrarSeccion(seccion) {
@@ -180,9 +129,9 @@ function renderEnergia(cont) {
   cont.innerHTML = `
     <h2>⚡ Energía</h2>
 
-    <label>Mes</label>
-    <input id="mes" readonly onclick="abrirModalMes()" placeholder="Seleccionar mes">
-
+    <label for="mes">Mes y Año</label>
+    <input type="month" id="mes">
+    
     <label>Lectura anterior (kWh)</label>
     <input id="lectura_anterior" type="number">
 
@@ -239,7 +188,7 @@ async function guardarEnergia() {
     .from('gastos')
     .insert([{
       tipo: 'energia',
-      fecha: new Date(),
+      fecha: `${anio}-${mesNum}-01`,
       total,
       usuario_id
     }])
@@ -257,7 +206,7 @@ async function guardarEnergia() {
     .insert([{
       gasto_id: gasto.id,
       consumo_kwh: consumo,
-      periodo,
+      periodo: `${nombreMes} ${anio}`
       lectura_anterior,
       lectura_actual
     }]);
