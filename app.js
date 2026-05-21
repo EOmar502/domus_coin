@@ -11,6 +11,23 @@ tg.expand();
 const user = tg.initDataUnsafe?.user || null;
 
 const usuario_id = user ? user.id : 'demo_user';
+// Limpiar formularios
+
+function limpiarFormulario(containerId) {
+  const cont = document.getElementById(containerId);
+
+  const inputs = cont.querySelectorAll('input, select');
+
+  inputs.forEach(input => {
+    if (input.type === "month") {
+      input.value = ""; // limpiar mes
+    } else if (input.tagName === "SELECT") {
+      input.selectedIndex = 0;
+    } else {
+      input.value = "";
+    }
+  });
+}
 
 // Navegación
 function mostrarSeccion(seccion) {
@@ -99,6 +116,8 @@ async function guardarAgua() {
     alert(err2.message);
   } else {
     alert("✅ Agua guardada correctamente");
+
+    limpiarFormulario('contenido');
   }
 }
 
@@ -194,6 +213,7 @@ async function guardarEnergia() {
     alert(err2.message);
   } else {
     alert("✅ Energía guardada correctamente");
+    limpiarFormulario('contenido');
   }
 }
 
@@ -223,6 +243,8 @@ async function guardarVehiculo() {
     }]);
 
   alert("✅ Vehículo guardado");
+  limpiarFormulario('contenido');
+
 }
 
 // ⛽ Gasolina
@@ -281,6 +303,8 @@ async function guardarGasolina() {
     }]);
 
   alert("✅ Gasolina guardada");
+  limpiarFormulario('contenido');
+
 }
 
 // 📊 Dashboard básico
