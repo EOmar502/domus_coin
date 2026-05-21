@@ -29,6 +29,58 @@ function limpiarFormulario(containerId) {
   });
 }
 
+// Selector de calendario
+function abrirModalMes() {
+  document.getElementById('modalMes').style.display = 'flex';
+}
+
+function cerrarModal() {
+  document.getElementById('modalMes').style.display = 'none';
+}
+
+function cargarPickers() {
+  const meses = [
+    "Ene","Feb","Mar","Abr","May","Jun",
+    "Jul","Ago","Sep","Oct","Nov","Dic"
+  ];
+
+  const mesSelect = document.getElementById('mesPicker');
+  const anioSelect = document.getElementById('anioPicker');
+
+  mesSelect.innerHTML = '';
+  anioSelect.innerHTML = '';
+
+  meses.forEach((m, i) => {
+    mesSelect.innerHTML += `<option value="${i+1}">${m}</option>`;
+  });
+
+  const anioActual = new Date().getFullYear();
+
+  for (let i = anioActual - 2; i <= anioActual + 2; i++) {
+    anioSelect.innerHTML += `<option value="${i}">${i}</option>`;
+  }
+}
+
+function establecerMes() {
+  const mes = document.getElementById('mesPicker').value;
+  const anio = document.getElementById('anioPicker').value;
+
+  const valor = `${anio}-${String(mes).padStart(2, '0')}`;
+
+  document.getElementById('mes').value = valor;
+
+  cerrarModal();
+}
+
+function limpiarMes() {
+  document.getElementById('mes').value = '';
+}
+
+// 
+window.onload = () => {
+  cargarPickers();
+};
+
 // Navegación
 function mostrarSeccion(seccion) {
   const cont = document.getElementById('contenido');
@@ -128,7 +180,8 @@ function renderEnergia(cont) {
   cont.innerHTML = `
     <h2>⚡ Energía</h2>
 
-    <input id="periodo" placeholder="Periodo (02 Ene 26 al 12 Mar 26)">
+    <label>Mes</label>
+    <input id="mes" readonly onclick="abrirModalMes()" placeholder="Seleccionar mes">
 
     <label>Lectura anterior (kWh)</label>
     <input id="lectura_anterior" type="number">
