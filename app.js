@@ -109,20 +109,61 @@ function renderEnergia(cont) {
   cont.innerHTML = `
     <h2>⚡ Energía</h2>
 
-    <input id="periodo" placeholder="Periodo (Ene-Feb)">
-    <input id="consumo_kwh" placeholder="Consumo kWh" type="number">
-    <input id="total_energia" placeholder="Total $" type="number">
+    <input id="periodo" placeholder="Periodo (02 Ene 26 al 12 Mar 26)">
 
-    <button onclick="guardarEnergia()">Guardar</button>
+    <label>Lectura anterior (kWh)</label>
+    <input id="lectura_anterior" type="number">
+
+    <label>Lectura actual (kWh)</label>
+    <input id="lectura_actual" type="number">
+
+    <label>Consumo calculado (kWh)</label>
+    <input id="consumo_kwh" type="number" readonly>
+
+    <label>Total ($)</label>
+    <input id="total_energia" type="number">
+
+    <button onclick="guardarEnergia()">💾 Guardar</button>
   `;
+
+  // cálculo automático
+  document.getElementById('lectura_actual').addEventListener('input', calcularConsumo);
+  document.getElementById('lectura_anterior').addEventListener('input', calcularConsumo);
+}
+
+function calcularConsumo() {
+  const anterior = parseFloat(document.getElementById('lectura_anterior').value) || 0;
+  const actual = parseFloat(document.getElementById('lectura_actual').value) || 0;
+
+  const consumo = actual - anterior;
+
+  if (consumo >= 0) {
+    document.getElementById('consumo_kwh').value = consumo;
+  } else {
+    document.getElementById('consumo_kwh').value = '';
+  }
 }
 
 async function guardarEnergia() {
+
   const periodo = document.getElementById('periodo').value;
-  const consumo = parseFloat(document.getElementById('consumo_kwh').value);
+  const lectura_anterior = parseFloat(document.getElementById('lectura_anterior').value);
+  const lectura_actual = parseFloat(document.getElementById('lectura_actual').value);
+  const consumo = lectura_actual - lectura_anterior;
   const total = parseFloat(document.getElementById('total_energia').value);
 
-  const { data: gasto } = await supabaseClient
+  if (!periodo || !lectura_anterior || !lectura_actual || !total) {
+    alert("⚠️ Completa todos los campos");
+    return;
+  }
+
+  if (lectura_actual < lectura_anterior) {
+    alert("❌ La lectura actual no puede ser menor a la anterior");
+    return;
+  }
+
+  // 1️⃣ Insert en gastos
+  const { data: gasto, error: err1 } = await supabaseClient
     .from('gastos')
     .insert([{
       tipo: 'energia',
@@ -133,15 +174,27 @@ async function guardarEnergia() {
     .select()
     .single();
 
-  await supabaseClient
+  if (err1) {
+    alert(err1.message);
+    return;
+  }
+
+  // 2️⃣ Insert en energia
+  const { error: err2 } = await supabaseClient
     .from('energia')
     .insert([{
       gasto_id: gasto.id,
       consumo_kwh: consumo,
-      periodo
+      periodo,
+      lectura_anterior,
+      lectura_actual
     }]);
 
-  alert("✅ Energía guardada");
+  if (err2) {
+    alert(err2.message);
+  } else {
+    alert("✅ Energía guardada correctamente");
+  }
 }
 
 // 🚗 Vehículos
