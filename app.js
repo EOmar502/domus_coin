@@ -233,6 +233,7 @@ async function guardarEnergia() {
   }
 }
 
+
 // 🚗 Vehículos
 
 function renderVehiculos(cont) {
@@ -539,22 +540,191 @@ function mostrarTotales(agua, energia, gasolina) {
   const cont = document.getElementById('resumenTotales');
 
   cont.innerHTML = `
-    <div style="flex:1; background:#e0f7fa; padding:10px; border-radius:10px; text-align:center;">
-      <div>💧 Agua</div>
-      <strong>$${agua.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
+    <div onclick="verDetalle('agua')" style="cursor:pointer; flex:1; background:#e1f5fe; padding:10px; border-radius:12px; text-align:center;">
+      <div style="color:#0288d1;">💧 Agua</div>
+      <strong>${formatoMoneda(agua)}</strong>
     </div>
 
-    <div style="flex:1; background:#fff8e1; padding:10px; border-radius:10px; text-align:center;">
-      <div>⚡ Energía</div>
-      <strong>$${energia.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
+    <div onclick="verDetalle('energia')" style="cursor:pointer; flex:1; background:#fff8e1; padding:10px; border-radius:12px; text-align:center;">
+      <div style="color:#fbc02d;">⚡ Energía</div>
+      <strong>${formatoMoneda(energia)}</strong>
     </div>
 
-    <div style="flex:1; background:#fdecea; padding:10px; border-radius:10px; text-align:center;">
-      <div>⛽ Gasolina</div>
-      <strong>$${gasolina.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
+    <div onclick="verDetalle('gasolina')" style="cursor:pointer; flex:1; background:#fdecea; padding:10px; border-radius:12px; text-align:center;">
+      <div style="color:#ef5350;">⛽ Gasolina</div>
+      <strong>${formatoMoneda(gasolina)}</strong>
     </div>
   `;
 }
+
+function verDetalle(tipo) {
+
+  const cont = document.getElementById('contenido');
+
+  if (tipo === 'agua') renderDetalleAgua(cont);
+  if (tipo === 'energia') renderDetalleEnergia(cont);
+  if (tipo === 'gasolina') renderDetalleGasolina(cont);
+}
+
+// Minigrafico de seleccion AGUA
+async function renderDetalleAgua(cont) {
+
+  cont.innerHTML = `
+    <h2>💧 Consumo de Agua</h2>
+    <canvas id="graficaDetalle"></canvas>
+  `;
+
+  const { data } = await supabaseClient
+    .from('agua')
+    .select(`
+      consumo_m3,
+      gasto_id,
+      gastos (fecha, total)
+    `);
+
+  procesarAgua(data);
+}
+
+function procesarAgua(data) {
+
+  const labels = [];
+  const consumo = [];
+  const costo = [];
+
+  data.forEach(d => {
+    const fecha = new Date(d.gastos.fecha + 'T00:00:00-06:00');
+
+    const mes = fecha.toLocaleString('es-MX', { month:'short', year:'numeric' });
+
+    labels.push(mes);
+    consumo.push(d.consumo_m3);
+    costo.push(d.gastos.total);
+  });
+
+  crearGraficaComparativa(labels, consumo, costo, 'm³');
+}
+
+
+// Minigrafico de seleccion Electricidad
+async function renderDetalleEnergia(cont) {
+
+  cont.innerHTML = `
+    <h2>⚡ Consumo Energía</h2>
+    <canvas id="graficaDetalle"></canvas>
+  `;
+
+  const { data } = await supabaseClient
+    .from('energia')
+    .select(`
+      consumo_kwh,
+      gasto_id,
+      gastos (fecha, total)
+    `);
+
+  const labels = [];
+  const consumo = [];
+  const costo = [];
+
+  data.forEach(d => {
+    const fecha = new Date(d.gastos.fecha + 'T00:00:00-06:00');
+
+    const mes = fecha.toLocaleString('es-MX', { month:'short', year:'numeric' });
+
+    labels.push(mes);
+    consumo.push(d.consumo_kwh);
+    costo.push(d.gastos.total);
+  });
+
+  crearGraficaComparativa(labels, consumo, costo, 'kWh');
+}
+
+//Minigrafico Gasolina
+
+async function renderDetalleGasolina(cont) {
+
+  cont.innerHTML = `
+    <h2>⛽ Gasolina</h2>
+    <canvas id="graficaDetalle"></canvas>
+  `;
+
+  const { data } = await supabaseClient
+    .from('gasolina')
+    .select(`
+      litros,
+      kilometraje,
+      gasto_id,
+      gastos (fecha, total)
+    `);
+
+  const labels = [];
+  const litros = [];
+  const costo = [];
+  const rendimiento = [];
+
+  data.forEach(d => {
+
+    const fecha = new Date(d.gastos.fecha + 'T00:00:00-06:00');
+
+    const mes = fecha.toLocaleString('es-MX', { month:'short', year:'numeric' });
+
+    const kmPorLitro = d.kilometraje && d.litros
+      ? (d.kilometraje / d.litros)
+      : 0;
+
+    labels.push(mes);
+    litros.push(d.litros);
+    costo.push(d.gastos.total);
+    rendimiento.push(kmPorLitro);
+  });
+
+  crearGraficaGasolina(labels, litros, costo, rendimiento);
+}
+
+// GRÁFICA COMPARATIVA (dual axis 🔥)
+
+function crearGraficaComparativa(labels, consumo, costo, unidad) {
+
+  const ctx = document.getElementById('graficaDetalle');
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Consumo (' + unidad + ')',
+          data: consumo,
+          backgroundColor: '#42a5f5'
+        },
+        {
+          label: 'Costo ($)',
+          data: costo,
+          backgroundColor: '#ffca28'
+        }
+      ]
+    }
+  });
+}
+
+// GASOLINA (3 métricas 🔥 TOP)
+
+function crearGraficaGasolina(labels, litros, costo, rendimiento) {
+
+  const ctx = document.getElementById('graficaDetalle');
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Litros', data: litros },
+        { label: 'Costo', data: costo },
+        { label: 'km/L', data: rendimiento, type:'line' }
+      ]
+    }
+  });
+}
+
 
 // Prueba de conexión a base de datos
 async function testDB() {
