@@ -308,32 +308,92 @@ async function guardarGasolina() {
 }
 
 // 📊 Dashboard básico
-
 async function renderDashboard(cont) {
+  cont.innerHTML = `
+    <h2>📊 Dashboard de Gastos</h2>
+    <canvas id="grafica" height="200"></canvas>
+  `;
 
-  const { data } = await supabaseClient
+  await cargarGrafica();
+}
+
+// Obtener datos desde Supabase
+async function cargarGrafica() {
+
+  const { data, error } = await supabaseClient
     .from('gastos')
     .select('*')
     .eq('usuario_id', usuario_id);
 
-  let total = 0;
-  let porTipo = {};
-
-  data.forEach(g => {
-    total += g.total;
-
-    if (!porTipo[g.tipo]) porTipo[g.tipo] = 0;
-    porTipo[g.tipo] += g.total;
-  });
-
-  let html = `<h2>📊 Dashboard</h2>`;
-  html += `<h3>Total: $${total}</h3>`;
-
-  for (let tipo in porTipo) {
-    html += `<p>${tipo}: $${porTipo[tipo]}</p>`;
+  if (error) {
+    console.error(error);
+    return;
   }
 
-  cont.innerHTML = html;
+  procesarDatosGrafica(data);
+}
+
+// Agrupamos por mes y tipo
+function procesarDatosGrafica(data) {
+
+  const meses = {};
+  
+  data.forEach(g => {
+    const fecha = new Date(g.fecha);
+    const nombres = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+    const mes = nombres[fecha.getMonth()] + " " + fecha.getFullYear();
+
+    if (!meses[mes]) {
+      meses[mes] = { agua: 0, energia: 0, gasolina: 0 };
+    }
+
+    meses[mes][g.tipo] += parseFloat(g.total);
+  });
+
+  const labels = Object.keys(meses).sort();
+  const agua = labels.map(m => meses[m].agua || 0);
+  const energia = labels.map(m => meses[m].energia || 0);
+  const gasolina = labels.map(m => meses[m].gasolina || 0);
+
+  crearGrafica(labels, agua, energia, gasolina);
+}
+
+// Crear la gráfica
+function crearGrafica(labels, agua, energia, gasolina) {
+
+  const ctx = document.getElementById('grafica');
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Agua 💧',
+          data: agua,
+          backgroundColor: '#00bcd4'
+        },
+        {
+          label: 'Energía ⚡',
+          data: energia,
+          backgroundColor: '#ff9800'
+        },
+        {
+          label: 'Gasolina ⛽',
+          data: gasolina,
+          backgroundColor: '#4caf50'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top'
+        }
+      }
+    }
+  });
 }
 
 // Prueba de conexión a base de datos
