@@ -165,7 +165,8 @@ async function guardarVehiculo() {
     .from('vehiculos')
     .insert([{
       modelo,
-      placas
+      placas,
+      usuario_id
     }]);
 
   alert("✅ Vehículo guardado");
