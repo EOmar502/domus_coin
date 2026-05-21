@@ -1,9 +1,10 @@
-// 🔐 SUPABASE CONFIG
+// =========================
+// 🔐 CONFIG
+// =========================
 const supabaseUrl = 'https://kmaydnzeiyynbphudntj.supabase.co';
 const supabaseKey = 'sb_publishable_lV7QSsgPX_5nJh0ksO83ww_7G9szgjj';
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-// 📦 TELEGRAM DATA (seguro en web y Telegram)
 let usuario_id = 'demo_user';
 
 if (window.Telegram && Telegram.WebApp) {
@@ -13,267 +14,305 @@ if (window.Telegram && Telegram.WebApp) {
   usuario_id = user ? user.id : 'demo_user';
 }
 
-// 🔧 UTILIDADES
+// =========================
+// 🛠️ UTILIDADES
+// =========================
 function formatoMoneda(valor) {
-  return '$' + valor.toLocaleString('es-MX', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
+  return '$' + valor.toLocaleString('es-MX', { minimumFractionDigits:2 });
 }
 
-// Limpiar formularios
+function obtenerFechaMX(fecha) {
+  return new Date(fecha + 'T00:00:00-06:00');
+}
+
+function obtenerAnio() {
+  return document.getElementById('filtroAnio')?.value;
+}
+
 function limpiarFormulario(containerId) {
   const cont = document.getElementById(containerId);
-  const inputs = cont.querySelectorAll('input, select');
-  inputs.forEach(input => input.value = '');
+  cont.querySelectorAll('input,select').forEach(i => i.value = '');
 }
 
-// Navegación
-function mostrarSeccion(seccion) {
-  const cont = document.getElementById('contenido');
-  if (seccion === 'agua') renderAgua(cont);
-  if (seccion === 'energia') renderEnergia(cont);
-  if (seccion === 'gasolina') renderGasolina(cont);
-  if (seccion === 'vehiculos') renderVehiculos(cont);
-  if (seccion === 'dashboard') renderDashboard(cont);
+// =========================
+// 🧭 NAVEGACIÓN
+// =========================
+function mostrarSeccion(s){
+  const cont=document.getElementById('contenido');
+  if(s==='agua') renderAgua(cont);
+  if(s==='energia') renderEnergia(cont);
+  if(s==='gasolina') renderGasolina(cont);
+  if(s==='vehiculos') renderVehiculos(cont);
+  if(s==='dashboard') renderDashboard(cont);
+}
+
+// =========================
+// 💧 AGUA
+// =========================
+function renderAgua(c){
+  c.innerHTML=`
+  <h2>💧 Agua</h2>
+  <input id="mes" type="month">
+  <input id="consumo" placeholder="m³">
+  <input id="total" placeholder="$">
+  <button onclick="guardarAgua()">Guardar</button>`;
+}
+
+async function guardarAgua(){
+  const mes=document.getElementById('mes').value;
+  const consumo=parseFloat(document.getElementById('consumo').value);
+  const total=parseFloat(document.getElementById('total').value);
+
+  const [anio,mesNum]=mes.split("-");
+
+  const {data:gasto}=await supabaseClient.from('gastos')
+  .insert([{tipo:'agua',fecha:`${anio}-${mesNum}-01`,total,usuario_id}]).select().single();
+
+  await supabaseClient.from('agua')
+  .insert([{gasto_id:gasto.id,consumo_m3:consumo}]);
+
+  alert("✅ Guardado");
+  limpiarFormulario('contenido');
+}
+
+// =========================
+// ⚡ ENERGÍA
+// =========================
+function renderEnergia(c){
+  c.innerHTML=`
+  <h2>⚡ Energía</h2>
+  <input id="mes" type="month">
+  <input id="lectura_anterior">
+  <input id="lectura_actual">
+  <input id="consumo_kwh" readonly>
+  <input id="total_energia">
+  <button onclick="guardarEnergia()">Guardar</button>`;
+
+  document.getElementById('lectura_actual').addEventListener('input',calcular);
+  document.getElementById('lectura_anterior').addEventListener('input',calcular);
+}
+
+function calcular(){
+  const a=parseFloat(document.getElementById('lectura_anterior').value)||0;
+  const b=parseFloat(document.getElementById('lectura_actual').value)||0;
+  document.getElementById('consumo_kwh').value=b>=a?b-a:'';
+}
+
+async function guardarEnergia(){
+  const mes=document.getElementById('mes').value;
+  const [anio,mesNum]=mes.split("-");
+  const lectura_anterior=parseFloat(document.getElementById('lectura_anterior').value);
+  const lectura_actual=parseFloat(document.getElementById('lectura_actual').value);
+  const total=parseFloat(document.getElementById('total_energia').value);
+
+  const consumo=lectura_actual-lectura_anterior;
+
+  const {data:gasto}=await supabaseClient.from('gastos')
+  .insert([{tipo:'energia',fecha:`${anio}-${mesNum}-01`,total,usuario_id}]).select().single();
+
+  await supabaseClient.from('energia')
+  .insert([{gasto_id:gasto.id,consumo_kwh:consumo,lectura_anterior,lectura_actual}]);
+
+  alert("✅ Guardado");
+  limpiarFormulario('contenido');
+}
+
+// =========================
+// ⛽ GASOLINA
+// =========================
+async function renderGasolina(c){
+  const {data}=await supabaseClient.from('vehiculos').select('*');
+
+  c.innerHTML=`
+  <h2>⛽ Gasolina</h2>
+  <select id="vehiculo">${data.map(v=>`<option value="${v.id}">${v.modelo}</option>`)}</select>
+  <input id="litros">
+  <input id="precio">
+  <input id="km">
+  <button onclick="guardarGasolina()">Guardar</button>`;
+}
+
+async function guardarGasolina(){
+  const litros=parseFloat(document.getElementById('litros').value);
+  const precio=parseFloat(document.getElementById('precio').value);
+  const km=parseFloat(document.getElementById('km').value);
+
+  const total=litros*precio;
+
+  const {data:gasto}=await supabaseClient.from('gastos')
+  .insert([{tipo:'gasolina',fecha:new Date(),total,usuario_id}]).select().single();
+
+  await supabaseClient.from('gasolina')
+  .insert([{gasto_id:gasto.id,litros,kilometraje:km,precio_litro:precio}]);
+
+  alert("✅ Guardado");
+}
+
+// =========================
+// 🚗 VEHÍCULOS
+// =========================
+function renderVehiculos(c){
+  c.innerHTML=`
+  <h2>🚗 Vehículos</h2>
+  <input id="modelo">
+  <input id="placas">
+  <button onclick="guardarVehiculo()">Guardar</button>`;
+}
+
+async function guardarVehiculo(){
+  await supabaseClient.from('vehiculos').insert([{
+    modelo:document.getElementById('modelo').value,
+    placas:document.getElementById('placas').value,
+    usuario_id
+  }]);
+  alert("✅ Guardado");
 }
 
 // =========================
 // 📊 DASHBOARD
 // =========================
-
-async function renderDashboard(cont) {
-  cont.innerHTML = `
-    <h2>📊 Dashboard de Gastos</h2>
-
-    <label>Año</label>
-    <select id="filtroAnio"></select>
-
-    <div id="resumenTotales" style="display:flex; gap:10px; margin:15px 0;"></div>
-
-    <canvas id="grafica"></canvas>
-  `;
+async function renderDashboard(cont){
+  cont.innerHTML=`
+  <h2>📊 Dashboard</h2>
+  <select id="filtroAnio"></select>
+  <div id="resumen"></div>
+  <canvas id="grafica"></canvas>`;
   await cargarAnios();
 }
 
-async function cargarAnios() {
-  const { data } = await supabaseClient
-    .from('gastos')
-    .select('fecha')
-    .eq('usuario_id', usuario_id);
-
-  const anios = new Set();
-
-  data.forEach(g => {
-    const year = new Date(g.fecha + 'T00:00:00-06:00').getFullYear();
-    anios.add(year);
-  });
-
-  const select = document.getElementById('filtroAnio');
-  const lista = [...anios].sort();
-
-  select.innerHTML = lista.map(a => `<option>${a}</option>`).join('');
-
-  const actual = new Date().getFullYear();
-  if (lista.includes(actual)) select.value = actual;
-
-  select.addEventListener('change', cargarGrafica);
-
+async function cargarAnios(){
+  const {data}=await supabaseClient.from('gastos').select('fecha');
+  const anios=[...new Set(data.map(g=>obtenerFechaMX(g.fecha).getFullYear()))];
+  const select=document.getElementById('filtroAnio');
+  select.innerHTML=anios.map(a=>`<option>${a}</option>`).join('');
+  select.value=new Date().getFullYear();
+  select.onchange=cargarGrafica;
   cargarGrafica();
 }
 
-async function cargarGrafica() {
-  const anio = document.getElementById('filtroAnio')?.value;
+async function cargarGrafica(){
+  const anio=obtenerAnio();
+  const {data}=await supabaseClient.from('gastos').select('*');
 
-  const { data } = await supabaseClient
-    .from('gastos')
-    .select('*')
-    .eq('usuario_id', usuario_id);
+  const filtrados=data.filter(g=>obtenerFechaMX(g.fecha).getFullYear()==anio);
 
-  const filtrados = data.filter(g =>
-    new Date(g.fecha + 'T00:00:00-06:00').getFullYear() == anio
-  );
-
-  procesarDatosGrafica(filtrados);
+  procesar(filtrados);
 }
 
-// Procesamiento
-function procesarDatosGrafica(data) {
+function procesar(data){
+  const meses={},tot={agua:0,energia:0,gasolina:0};
 
-  const meses = {};
-  let totalAgua = 0;
-  let totalEnergia = 0;
-  let totalGasolina = 0;
+  data.forEach(g=>{
+    const f=obtenerFechaMX(g.fecha);
+    const key=f.getFullYear()+"-"+f.getMonth();
+    const label=f.toLocaleString('es-MX',{month:'short',year:'numeric'});
 
-  data.forEach(g => {
+    if(!meses[key]) meses[key]={label,agua:0,energia:0,gasolina:0};
 
-    const fecha = new Date(g.fecha + 'T00:00:00-06:00');
-
-    const clave = `${fecha.getFullYear()}-${fecha.getMonth()}`;
-    const label = fecha.toLocaleString('es-MX', { month:'short', year:'numeric' });
-
-    if (!meses[clave]) {
-      meses[clave] = { label, agua:0, energia:0, gasolina:0 };
-    }
-
-    meses[clave][g.tipo] += g.total;
-
-    if (g.tipo === 'agua') totalAgua += g.total;
-    if (g.tipo === 'energia') totalEnergia += g.total;
-    if (g.tipo === 'gasolina') totalGasolina += g.total;
-
+    meses[key][g.tipo]+=g.total;
+    tot[g.tipo]+=g.total;
   });
 
-  mostrarTotales(totalAgua, totalEnergia, totalGasolina);
+  mostrarTotales(tot);
 
-  const orden = Object.keys(meses).sort();
+  const orden=Object.keys(meses).sort();
 
   crearGrafica(
-    orden.map(k => meses[k].label),
-    orden.map(k => meses[k].agua),
-    orden.map(k => meses[k].energia),
-    orden.map(k => meses[k].gasolina)
+    orden.map(k=>meses[k].label),
+    orden.map(k=>meses[k].agua),
+    orden.map(k=>meses[k].energia),
+    orden.map(k=>meses[k].gasolina)
   );
 }
 
-// Gráfica principal
-function crearGrafica(labels, agua, energia, gasolina) {
+function mostrarTotales(t){
+  document.getElementById('resumen').innerHTML=`
+  <div onclick="verDetalle('agua')">💧 ${formatoMoneda(t.agua)}</div>
+  <div onclick="verDetalle('energia')">⚡ ${formatoMoneda(t.energia)}</div>
+  <div onclick="verDetalle('gasolina')">⛽ ${formatoMoneda(t.gasolina)}</div>`;
+}
 
-  const ctx = document.getElementById('grafica');
+// =========================
+// 🔎 DETALLE
+// =========================
+function verDetalle(tipo){
+  const cont=document.getElementById('contenido');
+  cont.innerHTML=`<button onclick="mostrarSeccion('dashboard')">⬅</button><canvas id="graficaDetalle"></canvas>`;
 
-  if (window.chart) window.chart.destroy();
+  if(tipo==='agua') detalle('agua','consumo_m3','m³');
+  if(tipo==='energia') detalle('energia','consumo_kwh','kWh');
+  if(tipo==='gasolina') detalleGasolina();
+}
 
-  window.chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
+async function detalle(tabla,campo,unidad){
+  const anio=obtenerAnio();
+
+  const {data}=await supabaseClient.from(tabla)
+  .select(`${campo},gastos(fecha,total)`);
+
+  const filtrados=data.filter(d=>obtenerFechaMX(d.gastos.fecha).getFullYear()==anio);
+
+  const labels=[],consumo=[],costo=[];
+
+  filtrados.forEach(d=>{
+    const f=obtenerFechaMX(d.gastos.fecha);
+    labels.push(f.toLocaleString('es-MX',{month:'short'}));
+    consumo.push(d[campo]);
+    costo.push(d.gastos.total);
+  });
+
+  graficaDetalle(labels,consumo,costo,unidad);
+}
+
+function graficaDetalle(labels,consumo,costo,unidad){
+  const ctx=document.getElementById('graficaDetalle');
+  if(window.chartDetalle) window.chartDetalle.destroy();
+
+  window.chartDetalle=new Chart(ctx,{
+    data:{
       labels,
-      datasets: [
-        { label: 'Agua', data: agua, backgroundColor:'#0288d1' },
-        { label: 'Energía', data: energia, backgroundColor:'#fbc02d' },
-        { label: 'Gasolina', data: gasolina, backgroundColor:'#ef5350' }
+      datasets:[
+        {type:'line',label:unidad,data:consumo,yAxisID:'y1'},
+        {type:'bar',label:'Costo',data:costo,yAxisID:'y2'}
       ]
     },
-    options: {
-      plugins: { legend:{ display:false }},
-      scales: {
-        y: {
-          ticks: {
-            callback:v => formatoMoneda(v)
-          }
+    options:{
+      scales:{
+        y2:{position:'right',
+          ticks:{callback:v=>formatoMoneda(v)}
         }
       }
     }
   });
 }
 
-// Tarjetas
-function mostrarTotales(agua, energia, gasolina) {
-  document.getElementById('resumenTotales').innerHTML = `
-    <div onclick="verDetalle('agua')" style="flex:1;background:#e1f5fe;padding:10px;border-radius:10px;text-align:center;cursor:pointer">
-      💧 Agua<br>${formatoMoneda(agua)}
-    </div>
-    <div onclick="verDetalle('energia')" style="flex:1;background:#fff8e1;padding:10px;border-radius:10px;text-align:center;cursor:pointer">
-      ⚡ Energía<br>${formatoMoneda(energia)}
-    </div>
-    <div onclick="verDetalle('gasolina')" style="flex:1;background:#fdecea;padding:10px;border-radius:10px;text-align:center;cursor:pointer">
-      ⛽ Gasolina<br>${formatoMoneda(gasolina)}
-    </div>
-  `;
-}
+async function detalleGasolina(){
+  const anio=obtenerAnio();
 
-// =========================
-// 🔎 DETALLES
-// =========================
+  const {data}=await supabaseClient.from('gasolina')
+  .select(`litros,kilometraje,gastos(fecha,total)`);
 
-function verDetalle(tipo) {
-  const cont = document.getElementById('contenido');
+  const filtrados=data.filter(d=>obtenerFechaMX(d.gastos.fecha).getFullYear()==anio);
 
-  cont.innerHTML = `<button onclick="mostrarSeccion('dashboard')">⬅ Volver</button>
-                    <canvas id="graficaDetalle"></canvas>`;
+  const labels=[],litros=[],costo=[],rend=[];
 
-  if (tipo === 'agua') renderDetalle('agua', 'agua', 'consumo_m3', 'm³');
-  if (tipo === 'energia') renderDetalle('energia', 'energia', 'consumo_kwh', 'kWh');
-  if (tipo === 'gasolina') renderGasolinaDetalle();
-}
-
-// Generico agua/energia
-async function renderDetalle(tabla, tipo, campo, unidad) {
-
-  const { data } = await supabaseClient
-    .from(tabla)
-    .select(`${campo}, gastos(fecha,total)`);
-
-  data.sort((a,b)=>new Date(a.gastos.fecha)-new Date(b.gastos.fecha));
-
-  const labels=[], consumo=[], costo=[];
-
-  data.forEach(d=>{
-    const f=new Date(d.gastos.fecha+'T00:00:00-06:00');
-    labels.push(f.toLocaleString('es-MX',{month:'short',year:'numeric'}));
-    consumo.push(d[campo]);
-    costo.push(d.gastos.total);
-  });
-
-  crearDetalle(labels, consumo, costo, unidad);
-}
-
-// gasolina
-async function renderGasolinaDetalle() {
-
-  const { data } = await supabaseClient
-    .from('gasolina')
-    .select(`litros,kilometraje,gastos(fecha,total)`);
-
-  const labels=[], litros=[], costo=[], rendimiento=[];
-
-  data.forEach(d=>{
-    const f=new Date(d.gastos.fecha+'T00:00:00-06:00');
-    labels.push(f.toLocaleString('es-MX',{month:'short',year:'numeric'}));
+  filtrados.forEach(d=>{
+    const f=obtenerFechaMX(d.gastos.fecha);
+    labels.push(f.toLocaleString('es-MX',{month:'short'}));
     litros.push(d.litros);
     costo.push(d.gastos.total);
-    rendimiento.push(d.litros>0 ? d.kilometraje/d.litros : 0);
+    rend.push(d.litros>0?d.kilometraje/d.litros:0);
   });
-
-  crearGasolina(labels, litros, costo, rendimiento);
-}
-
-// gráfica detalle
-function crearDetalle(labels, consumo, costo, unidad) {
-
-  const ctx=document.getElementById('graficaDetalle');
 
   if(window.chartDetalle) window.chartDetalle.destroy();
 
-  window.chartDetalle=new Chart(ctx,{
-    data:{
-      labels,
-      datasets:[
-        {type:'line',label:'Consumo '+unidad,data:consumo,yAxisID:'y1'},
-        {type:'bar',label:'Costo',data:costo,yAxisID:'y2'}
-      ]
-    },
-    options:{
-      scales:{
-        y1:{position:'left'},
-        y2:{position:'right'}
-      }
-    }
-  });
-}
-
-function crearGasolina(labels, litros, costo, rendimiento){
-
-  const ctx=document.getElementById('graficaDetalle');
-
-  if(window.chartDetalle) window.chartDetalle.destroy();
-
-  window.chartDetalle=new Chart(ctx,{
+  window.chartDetalle=new Chart(document.getElementById('graficaDetalle'),{
     data:{
       labels,
       datasets:[
         {type:'bar',label:'Litros',data:litros},
         {type:'bar',label:'Costo',data:costo},
-        {type:'line',label:'km/L',data:rendimiento}
+        {type:'line',label:'km/L',data:rend}
       ]
     }
   });
