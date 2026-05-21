@@ -356,20 +356,30 @@ function procesarDatosGrafica(data) {
   
   data.forEach(g => {
     const fecha = new Date(g.fecha);
-    const nombres = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-    const mes = nombres[fecha.getMonth()] + " " + fecha.getFullYear();
 
-    if (!meses[mes]) {
-      meses[mes] = { agua: 0, energia: 0, gasolina: 0 };
+    const clave = fecha.getFullYear() + "-" + (fecha.getMonth() + 1);
+
+    const nombres = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+    const label = nombres[fecha.getMonth()] + " " + fecha.getFullYear();
+
+    if (!meses[clave]) {
+      meses[clave] = {
+        label,
+        agua: 0,
+        energia: 0,
+        gasolina: 0
+      };
     }
 
-    meses[mes][g.tipo] += parseFloat(g.total);
+    meses[clave][g.tipo] += parseFloat(g.total);
   });
 
-  const labels = Object.keys(meses).sort();
-  const agua = labels.map(m => meses[m].agua || 0);
-  const energia = labels.map(m => meses[m].energia || 0);
-  const gasolina = labels.map(m => meses[m].gasolina || 0);
+  const ordenados = Object.keys(meses).sort((a, b) => new Date(a) - new Date(b));
+
+  const labels = ordenados.map(k => meses[k].label);
+  const agua = ordenados.map(k => meses[k].agua);
+  const energia = ordenados.map(k => meses[k].energia);
+  const gasolina = ordenados.map(k => meses[k].gasolina);
 
   crearGrafica(labels, agua, energia, gasolina);
 }
@@ -379,7 +389,11 @@ function crearGrafica(labels, agua, energia, gasolina) {
 
   const ctx = document.getElementById('grafica');
 
-  new Chart(ctx, {
+  if (window.chart) {
+    window.chart.destroy();
+  }
+
+  window.chart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: labels,
@@ -403,7 +417,24 @@ function crearGrafica(labels, agua, energia, gasolina) {
     },
     options: {
       responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return '$' + value;
+            }
+          }
+        }
+      },
       plugins: {
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.dataset.label + ': $' + context.raw;
+            }
+          }
+        },
         legend: {
           position: 'top'
         }
@@ -411,6 +442,73 @@ function crearGrafica(labels, agua, energia, gasolina) {
     }
   });
 }
+
+// Selector de año en Dashboard
+async function renderDashboard(cont) {
+
+  cont.innerHTML = `
+    <h2>📊 Dashboard de Gastos</h2>
+
+    <label>Año</label>
+    <select id="filtroAnio"></select>
+
+    <canvas id="grafica" height="200"></canvas>
+  `;
+
+  await cargarAnios();
+}
+
+// Cargar años disponibles
+async function cargarAnios() {
+
+  const { data } = await supabaseClient
+    .from('gastos')
+    .select('fecha')
+    .eq('usuario_id', usuario_id);
+
+  const anios = new Set();
+
+  data.forEach(g => {
+    const year = new Date(g.fecha).getFullYear();
+    anios.add(year);
+  });
+
+  const select = document.getElementById('filtroAnio');
+
+  select.innerHTML = '';
+
+  [...anios].sort().forEach(anio => {
+    select.innerHTML += `<option value="${anio}">${anio}</option>`;
+  });
+
+  select.addEventListener('change', cargarGrafica);
+
+  cargarGrafica();
+}
+
+// Filtrar datos en la gráfica
+async function cargarGrafica() {
+
+  const anio = document.getElementById('filtroAnio')?.value;
+
+  const { data, error } = await supabaseClient
+    .from('gastos')
+    .select('*')
+    .eq('usuario_id', usuario_id);
+
+  if (error) return console.error(error);
+
+  let filtrados = data;
+
+  if (anio) {
+    filtrados = data.filter(g => {
+      return new Date(g.fecha).getFullYear() == anio;
+    });
+  }
+
+  procesarDatosGrafica(filtrados);
+}
+
 
 // Prueba de conexión a base de datos
 async function testDB() {
