@@ -323,7 +323,7 @@ async function guardarGasolina() {
 
 }
 
-// 📊 Dashboard básico
+// 📊 Dashboard Completo
 async function renderDashboard(cont) {
   cont.innerHTML = `
     <h2>📊 Dashboard de Gastos</h2>
@@ -540,17 +540,17 @@ function mostrarTotales(agua, energia, gasolina) {
   cont.innerHTML = `
     <div style="flex:1; background:#e0f7fa; padding:10px; border-radius:10px; text-align:center;">
       <div>💧 Agua</div>
-      <strong>$${agua.toFixed(2)}</strong>
+      <strong>$${agua.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
     </div>
 
     <div style="flex:1; background:#fff3e0; padding:10px; border-radius:10px; text-align:center;">
       <div>⚡ Energía</div>
-      <strong>$${energia.toFixed(2)}</strong>
+      <strong>$${energia.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
     </div>
 
     <div style="flex:1; background:#e8f5e9; padding:10px; border-radius:10px; text-align:center;">
       <div>⛽ Gasolina</div>
-      <strong>$${gasolina.toFixed(2)}</strong>
+      <strong>$${gasolina.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
     </div>
   `;
 }
