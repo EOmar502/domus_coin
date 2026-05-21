@@ -417,12 +417,12 @@ function crearGrafica(labels, agua, energia, gasolina) {
         {
           label: 'Energía ⚡',
           data: energia,
-          backgroundColor: '#F8EC04'
+          backgroundColor: '#fbc02d'
         },
         {
           label: 'Gasolina ⛽',
           data: gasolina,
-          backgroundColor: '#EF4E0D'
+          backgroundColor: '#ef5350'
         }
       ]
     },
@@ -531,7 +531,7 @@ async function cargarGrafica() {
   procesarDatosGrafica(filtrados);
 }
 
-// Mostrar Totales
+// Mostrar Totales en Tarjetas
 
 function mostrarTotales(agua, energia, gasolina) {
 
@@ -543,12 +543,12 @@ function mostrarTotales(agua, energia, gasolina) {
       <strong>$${agua.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
     </div>
 
-    <div style="flex:1; background:#fff3e0; padding:10px; border-radius:10px; text-align:center;">
+    <div style="flex:1; background:#fff8e1; padding:10px; border-radius:10px; text-align:center;">
       <div>⚡ Energía</div>
       <strong>$${energia.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
     </div>
 
-    <div style="flex:1; background:#e8f5e9; padding:10px; border-radius:10px; text-align:center;">
+    <div style="flex:1; background:#fdecea; padding:10px; border-radius:10px; text-align:center;">
       <div>⛽ Gasolina</div>
       <strong>$${gasolina.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
     </div>
