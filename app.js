@@ -472,6 +472,7 @@ async function renderDashboard(cont) {
 }
 
 // Cargar años disponibles
+
 async function cargarAnios() {
 
   const { data } = await supabaseClient
@@ -487,12 +488,20 @@ async function cargarAnios() {
   });
 
   const select = document.getElementById('filtroAnio');
-
   select.innerHTML = '';
 
-  [...anios].sort().forEach(anio => {
+  const listaAnios = [...anios].sort();
+
+  listaAnios.forEach(anio => {
     select.innerHTML += `<option value="${anio}">${anio}</option>`;
   });
+
+  const anioActual = new Date().getFullYear();
+
+  // ✅ Seleccionar actual si existe
+  if (listaAnios.includes(anioActual)) {
+    select.value = anioActual;
+  }
 
   select.addEventListener('change', cargarGrafica);
 
