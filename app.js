@@ -406,12 +406,12 @@ function crearGrafica(labels, agua, energia, gasolina) {
         {
           label: 'Energía ⚡',
           data: energia,
-          backgroundColor: '#ff9800'
+          backgroundColor: '#F8EC04'
         },
         {
           label: 'Gasolina ⛽',
           data: gasolina,
-          backgroundColor: '#4caf50'
+          backgroundColor: '#EF4E0D'
         }
       ]
     },
