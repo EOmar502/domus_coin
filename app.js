@@ -447,7 +447,8 @@ function crearGrafica(labels, agua, energia, gasolina) {
           }
         },
         legend: {
-          position: 'top'
+          //position: 'top'
+          display: false  // elimina la leyenda
         }
       }
     }
