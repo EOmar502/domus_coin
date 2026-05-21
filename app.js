@@ -358,7 +358,7 @@ function procesarDatosGrafica(data) {
   let totalGasolina = 0;
 
   data.forEach(g => {
-    const fecha = new Date(g.fecha);
+    const fecha = new Date(g.fecha + 'T00:00:00-06:00');
 
     const clave = fecha.getFullYear() + "-" + (fecha.getMonth() + 1);
 
