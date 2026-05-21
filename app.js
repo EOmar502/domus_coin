@@ -12,16 +12,6 @@ const user = tg.initDataUnsafe?.user || null;
 
 const usuario_id = user ? user.id : 'demo_user';
 
-// Consulta
-const mes = document.getElementById('mes').value;
-
-if (!mes) {
-  alert("⚠️ Selecciona mes");
-  return;
-}
-
-const [anio, mesNum] = mes.split("-");
-
 // Limpiar formularios
 
 function limpiarFormulario(containerId) {
