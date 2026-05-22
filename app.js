@@ -131,10 +131,10 @@ function renderEnergia(cont) {
     <input type="month" id="mes">
     
     <label>Lectura anterior (kWh)</label>
-    <input id="lectura_anterior" type="number">
+    <input id="lectura_anterior_energia" type="number">
 
     <label>Lectura actual (kWh)</label>
-    <input id="lectura_actual" type="number">
+    <input id="lectura_actual_energia" type="number">
 
     <label>Consumo calculado (kWh)</label>
     <input id="consumo_kwh" type="number" readonly>
@@ -151,8 +151,8 @@ function renderEnergia(cont) {
 }
 
 function calcularConsumoEnergia() {
-  const anterior = parseFloat(document.getElementById('lectura_anterior').value) || 0;
-  const actual = parseFloat(document.getElementById('lectura_actual').value) || 0;
+  const anterior = parseFloat(document.getElementById('lectura_anterior_energia').value) || 0;
+  const actual = parseFloat(document.getElementById('lectura_actual_energia').value) || 0;
 
   const consumo = actual - anterior;
 
@@ -166,8 +166,8 @@ function calcularConsumoEnergia() {
 async function guardarEnergia() {
 
   const mes = document.getElementById('mes').value;
-  const lectura_anterior = parseFloat(document.getElementById('lectura_anterior').value);
-  const lectura_actual = parseFloat(document.getElementById('lectura_actual').value);
+  const lectura_anterior = parseFloat(document.getElementById('lectura_anterior_energia').value);
+  const lectura_actual = parseFloat(document.getElementById('lectura_actual_energia').value);
   const total = parseFloat(document.getElementById('total_energia').value);
 
   if (!mes) {
@@ -241,10 +241,10 @@ function renderGas(cont) {
     <input type="month" id="mes">
     
     <label>Lectura anterior (m3)</label>
-    <input id="lectura_anterior" type="number">
+    <input id="lectura_anterior_gas" type="number">
 
     <label>Lectura actual (m3)</label>
-    <input id="lectura_actual" type="number">
+    <input id="lectura_actual_gas" type="number">
 
     <label>Consumo calculado (m3)</label>
     <input id="consumo_m3" type="number" readonly>
@@ -261,8 +261,8 @@ function renderGas(cont) {
 }
 
 function calcularConsumoGas() {
-  const anterior = parseFloat(document.getElementById('lectura_anterior').value) || 0;
-  const actual = parseFloat(document.getElementById('lectura_actual').value) || 0;
+  const anterior = parseFloat(document.getElementById('lectura_anterior_gas').value) || 0;
+  const actual = parseFloat(document.getElementById('lectura_actual_gas').value) || 0;
 
   const consumo = actual - anterior;
 
@@ -276,8 +276,8 @@ function calcularConsumoGas() {
 async function guardarGas() {
 
   const mes = document.getElementById('mes').value;
-  const lectura_anterior = parseFloat(document.getElementById('lectura_anterior').value);
-  const lectura_actual = parseFloat(document.getElementById('lectura_actual').value);
+  const lectura_anterior = parseFloat(document.getElementById('lectura_anterior_gas').value);
+  const lectura_actual = parseFloat(document.getElementById('lectura_actual_gas').value);
   const total = parseFloat(document.getElementById('total_gas').value);
 
   if (!mes) {
