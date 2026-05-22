@@ -482,12 +482,11 @@ async function cargarAnios() {
 }
 
 async function cargarGrafica() {
-  //const anio = document.getElementById('filtroAnio')?.value;
+  const anio = document.getElementById('filtroAnio')?.value;
   
-  const anio = anioSeleccionado;
-  if (!anio) return;
+  anioSeleccionado = anio;
 
-  //anioSeleccionado = anio;
+  if (!anio) return;
   
   const { data } = await supabaseClient
     .from('gastos')
