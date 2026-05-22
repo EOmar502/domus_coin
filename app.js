@@ -478,7 +478,9 @@ async function cargarAnios() {
 
 async function cargarGrafica() {
   const anio = document.getElementById('filtroAnio')?.value;
-
+  
+  anioSeleccionado = anio;
+  
   const { data } = await supabaseClient
     .from('gastos')
     .select('*')
@@ -606,9 +608,8 @@ async function renderDetalle(tabla, tipo, campo, unidad) {
     .select(`${campo}, gastos(fecha,total)`);
 
 // ✅ FILTRO POR AÑO
-//const anio = document.getElementById('filtroAnio')?.value;
-  const anio = anioSeleccionado;
-  
+  const anio = document.getElementById('filtroAnio')?.value;
+    
   const filtrados = data.filter(d =>
     new Date(d.gastos.fecha + 'T00:00:00-06:00').getFullYear() == anio
 );
