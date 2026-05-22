@@ -448,7 +448,7 @@ async function renderDashboard(cont) {
      grid-template-columns:1fr 1fr;
      gap:10px;
      margin:15px 0;
-   ">
+   "></div>
 
     <canvas id="grafica"></canvas>
   `;
@@ -482,9 +482,12 @@ async function cargarAnios() {
 }
 
 async function cargarGrafica() {
-  const anio = document.getElementById('filtroAnio')?.value;
+  //const anio = document.getElementById('filtroAnio')?.value;
   
-  anioSeleccionado = anio;
+  const anio = anioSeleccionado;
+  if (!anio) return;
+
+  //anioSeleccionado = anio;
   
   const { data } = await supabaseClient
     .from('gastos')
@@ -613,8 +616,10 @@ async function renderDetalle(tabla, tipo, campo, unidad) {
     .select(`${campo}, gastos(fecha,total)`);
 
 // ✅ FILTRO POR AÑO
-  const anio = document.getElementById('filtroAnio')?.value;
-    
+//const anio = document.getElementById('filtroAnio')?.value;
+  const anio = anioSeleccionado;
+  if (!anio) return;
+  
   const filtrados = data.filter(d =>
     new Date(d.gastos.fecha + 'T00:00:00-06:00').getFullYear() == anio
 );
@@ -647,8 +652,11 @@ async function renderGasolinaDetalle() {
 
   const labels=[], litros=[], costo=[], rendimiento=[];
 
-  const anio = document.getElementById('filtroAnio')?.value;
-
+//const anio = document.getElementById('filtroAnio')?.value;
+  
+  const anio = anioSeleccionado;
+  if (!anio) return;
+  
   const filtrados = data.filter(d =>
     new Date(d.gastos.fecha + 'T00:00:00-06:00').getFullYear() == anio
     );
