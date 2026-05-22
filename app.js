@@ -16,8 +16,8 @@ if (window.Telegram && Telegram.WebApp) {
 // 🔧 UTILIDADES
 function formatoMoneda(valor) {
   return '$' + valor.toLocaleString('es-MX', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1
   });
 }
 
@@ -233,7 +233,7 @@ async function guardarEnergia() {
 
 // 💨 Gas
 
-function renderEnergia(cont) {
+function renderGas(cont) {
   cont.innerHTML = `
     <h2>💨 Gas</h2>
 
