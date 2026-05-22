@@ -16,8 +16,8 @@ if (window.Telegram && Telegram.WebApp) {
 // 🔧 UTILIDADES
 function formatoMoneda(valor) {
   return '$' + valor.toLocaleString('es-MX', {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   });
 }
 
@@ -146,11 +146,11 @@ function renderEnergia(cont) {
   `;
 
   // cálculo automático
-  document.getElementById('lectura_actual').addEventListener('input', calcularConsumo);
-  document.getElementById('lectura_anterior').addEventListener('input', calcularConsumo);
+  document.getElementById('lectura_actual').addEventListener('input', calcularConsumoEnergia);
+  document.getElementById('lectura_anterior').addEventListener('input', calcularConsumoEnergia);
 }
 
-function calcularConsumo() {
+function calcularConsumoEnergia() {
   const anterior = parseFloat(document.getElementById('lectura_anterior').value) || 0;
   const actual = parseFloat(document.getElementById('lectura_actual').value) || 0;
 
@@ -256,11 +256,11 @@ function renderGas(cont) {
   `;
 
   // cálculo automático
-  document.getElementById('lectura_actual').addEventListener('input', calcularConsumo);
-  document.getElementById('lectura_anterior').addEventListener('input', calcularConsumo);
+  document.getElementById('lectura_actual').addEventListener('input', calcularConsumoGas);
+  document.getElementById('lectura_anterior').addEventListener('input', calcularConsumoGas);
 }
 
-function calcularConsumo() {
+function calcularConsumoGas() {
   const anterior = parseFloat(document.getElementById('lectura_anterior').value) || 0;
   const actual = parseFloat(document.getElementById('lectura_actual').value) || 0;
 
@@ -548,7 +548,7 @@ function crearGrafica(labels, agua, energia, gasolina, gas) {
         { label: 'Agua', data: agua, backgroundColor:'#0288d1' },
         { label: 'Energía', data: energia, backgroundColor:'#fbc02d' },
         { label: 'Gasolina', data: gasolina, backgroundColor:'#ef5350' },
-        { label: 'Gasolina', data: gas, backgroundColor:'#808080' }
+        { label: 'Gas', data: gas, backgroundColor:'#808080' }
       ]
     },
     options: {
@@ -565,7 +565,7 @@ function crearGrafica(labels, agua, energia, gasolina, gas) {
 }
 
 // Tarjetas
-function mostrarTotales(agua, energia, gasolina) {
+function mostrarTotales(agua, energia, gasolina, gas) {
   document.getElementById('resumenTotales').innerHTML = `
     <div onclick="verDetalle('agua')" style="flex:1;background:#e1f5fe;padding:10px;border-radius:10px;text-align:center;cursor:pointer">
       💧 Agua<br>${formatoMoneda(agua)}
@@ -601,15 +601,27 @@ function verDetalle(tipo) {
 // Generico agua/energia/gas
 async function renderDetalle(tabla, tipo, campo, unidad) {
 
-  const { data } = await supabaseClient
-    .from(tabla)
-    .select(`${campo}, gastos(fecha,total)`);
+const { data } = await supabaseClient
+  .from(tabla)
+  .select(`${campo}, gastos(fecha,total)`);
 
-  data.sort((a,b)=>new Date(a.gastos.fecha)-new Date(b.gastos.fecha));
+// ✅ FILTRO POR AÑO
+const anio = document.getElementById('filtroAnio')?.value;
 
-  const labels=[], consumo=[], costo=[];
+const filtrados = data.filter(d =>
+  new Date(d.gastos.fecha + 'T00:00:00-06:00').getFullYear() == anio
+);
 
-  data.forEach(d=>{
+// ✅ ORDENAR
+filtrados.sort((a,b)=>
+  new Date(a.gastos.fecha + 'T00:00:00-06:00') -
+  new Date(b.gastos.fecha + 'T00:00:00-06:00')
+);
+
+const labels=[], consumo=[], costo=[];
+
+// ✅ usar filtrados
+filtrados.forEach(d=>{
     const f=new Date(d.gastos.fecha+'T00:00:00-06:00');
     labels.push(f.toLocaleString('es-MX',{month:'short',year:'numeric'}));
     consumo.push(d[campo]);
@@ -628,7 +640,13 @@ async function renderGasolinaDetalle() {
 
   const labels=[], litros=[], costo=[], rendimiento=[];
 
-  data.forEach(d=>{
+  const anio = document.getElementById('filtroAnio')?.value;
+
+  const filtrados = data.filter(d =>
+    new Date(d.gastos.fecha + 'T00:00:00-06:00').getFullYear() == anio
+    );
+
+    filtrados.forEach(d=>{
     const f=new Date(d.gastos.fecha+'T00:00:00-06:00');
     labels.push(f.toLocaleString('es-MX',{month:'short',year:'numeric'}));
     litros.push(d.litros);
