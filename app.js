@@ -34,6 +34,7 @@ function mostrarSeccion(seccion) {
   if (seccion === 'agua') renderAgua(cont);
   if (seccion === 'energia') renderEnergia(cont);
   if (seccion === 'gasolina') renderGasolina(cont);
+  if (seccion === 'gas') renderGas(cont);
   if (seccion === 'vehiculos') renderVehiculos(cont);
   if (seccion === 'dashboard') renderDashboard(cont);
 }
@@ -230,6 +231,116 @@ async function guardarEnergia() {
   }
 }
 
+// 💨 Gas
+
+function renderEnergia(cont) {
+  cont.innerHTML = `
+    <h2>💨 Gas</h2>
+
+    <label for="mes">Mes y Año</label>
+    <input type="month" id="mes">
+    
+    <label>Lectura anterior (m3)</label>
+    <input id="lectura_anterior" type="number">
+
+    <label>Lectura actual (m3)</label>
+    <input id="lectura_actual" type="number">
+
+    <label>Consumo calculado (m3)</label>
+    <input id="consumo_m3" type="number" readonly>
+
+    <label>Total ($)</label>
+    <input id="total_gas" type="number">
+
+    <button onclick="guardarGas()">💾 Guardar</button>
+  `;
+
+  // cálculo automático
+  document.getElementById('lectura_actual').addEventListener('input', calcularConsumo);
+  document.getElementById('lectura_anterior').addEventListener('input', calcularConsumo);
+}
+
+function calcularConsumo() {
+  const anterior = parseFloat(document.getElementById('lectura_anterior').value) || 0;
+  const actual = parseFloat(document.getElementById('lectura_actual').value) || 0;
+
+  const consumo = actual - anterior;
+
+  if (consumo >= 0) {
+    document.getElementById('consumo_m3').value = consumo;
+  } else {
+    document.getElementById('consumo_m3').value = '';
+  }
+}
+
+async function guardarGas() {
+
+  const mes = document.getElementById('mes').value;
+  const lectura_anterior = parseFloat(document.getElementById('lectura_anterior').value);
+  const lectura_actual = parseFloat(document.getElementById('lectura_actual').value);
+  const total = parseFloat(document.getElementById('total_gas').value);
+
+  if (!mes) {
+    alert("⚠️ Selecciona mes");
+    return;
+  }
+
+  if (!lectura_anterior || !lectura_actual || !total) {
+    alert("⚠️ Completa todos los campos");
+    return;
+  }
+
+  if (lectura_actual < lectura_anterior) {
+    alert("❌ Lectura actual menor a la anterior");
+    return;
+  }
+
+  const [anio, mesNum] = mes.split("-");
+
+  const nombresMes = [
+    "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+    "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+  ];
+
+  const nombreMes = nombresMes[parseInt(mesNum) - 1];
+  const consumo = lectura_actual - lectura_anterior;
+
+  // 1. Insert en gastos
+  const { data: gasto, error: err1 } = await supabaseClient
+    .from('gastos')
+    .insert([{
+      tipo: 'gas',
+      fecha: `${anio}-${mesNum}-01`,
+      total,
+      usuario_id
+    }])
+    .select()
+    .single();
+
+  if (err1) {
+    alert(err1.message);
+    return;
+  }
+
+  // 2. Insert en gas
+  const { error: err2 } = await supabaseClient
+    .from('gas')
+    .insert([{
+      gasto_id: gasto.id,
+      consumo_m3: consumo,
+      periodo: `${nombreMes} ${anio}`,
+      lectura_anterior,
+      lectura_actual
+    }]);
+
+  if (err2) {
+    alert(err2.message);
+  } else {
+    alert("✅ Gas guardada correctamente");
+    limpiarFormulario('contenido');
+  }
+}
+
 
 // 🚗 Vehículos
 
@@ -387,6 +498,7 @@ function procesarDatosGrafica(data) {
   let totalAgua = 0;
   let totalEnergia = 0;
   let totalGasolina = 0;
+  let totalGas = 0;
 
   data.forEach(g => {
 
@@ -396,7 +508,7 @@ function procesarDatosGrafica(data) {
     const label = fecha.toLocaleString('es-MX', { month:'short', year:'numeric' });
 
     if (!meses[clave]) {
-      meses[clave] = { label, agua:0, energia:0, gasolina:0 };
+      meses[clave] = { label, agua:0, energia:0, gasolina:0, gas:0 };
     }
 
     meses[clave][g.tipo] += g.total;
@@ -404,10 +516,11 @@ function procesarDatosGrafica(data) {
     if (g.tipo === 'agua') totalAgua += g.total;
     if (g.tipo === 'energia') totalEnergia += g.total;
     if (g.tipo === 'gasolina') totalGasolina += g.total;
+    if (g.tipo === 'gas') totalGas += g.total;
 
   });
 
-  mostrarTotales(totalAgua, totalEnergia, totalGasolina);
+  mostrarTotales(totalAgua, totalEnergia, totalGasolina, totalGas);
 
   const orden = Object.keys(meses).sort();
 
@@ -415,12 +528,13 @@ function procesarDatosGrafica(data) {
     orden.map(k => meses[k].label),
     orden.map(k => meses[k].agua),
     orden.map(k => meses[k].energia),
-    orden.map(k => meses[k].gasolina)
+    orden.map(k => meses[k].gasolina),
+    orden.map(k => meses[k].gas)
   );
 }
 
 // Gráfica principal
-function crearGrafica(labels, agua, energia, gasolina) {
+function crearGrafica(labels, agua, energia, gasolina, gas) {
 
   const ctx = document.getElementById('grafica');
 
@@ -433,7 +547,8 @@ function crearGrafica(labels, agua, energia, gasolina) {
       datasets: [
         { label: 'Agua', data: agua, backgroundColor:'#0288d1' },
         { label: 'Energía', data: energia, backgroundColor:'#fbc02d' },
-        { label: 'Gasolina', data: gasolina, backgroundColor:'#ef5350' }
+        { label: 'Gasolina', data: gasolina, backgroundColor:'#ef5350' },
+        { label: 'Gasolina', data: gas, backgroundColor:'#808080' }
       ]
     },
     options: {
@@ -461,6 +576,9 @@ function mostrarTotales(agua, energia, gasolina) {
     <div onclick="verDetalle('gasolina')" style="flex:1;background:#fdecea;padding:10px;border-radius:10px;text-align:center;cursor:pointer">
       ⛽ Gasolina<br>${formatoMoneda(gasolina)}
     </div>
+    <div onclick="verDetalle('gas')" style="flex:1;background:#D3D3D3;padding:10px;border-radius:10px;text-align:center;cursor:pointer">
+      💨 Gas<br>${formatoMoneda(gas)}
+    </div>
   `;
 }
 
@@ -477,9 +595,10 @@ function verDetalle(tipo) {
   if (tipo === 'agua') renderDetalle('agua', 'agua', 'consumo_m3', 'm³');
   if (tipo === 'energia') renderDetalle('energia', 'energia', 'consumo_kwh', 'kWh');
   if (tipo === 'gasolina') renderGasolinaDetalle();
+  if (tipo === 'gas') renderDetalle('gas', 'gas', 'consumo_m3', 'm3');
 }
 
-// Generico agua/energia
+// Generico agua/energia/gas
 async function renderDetalle(tabla, tipo, campo, unidad) {
 
   const { data } = await supabaseClient
