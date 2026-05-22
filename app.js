@@ -442,8 +442,13 @@ async function renderDashboard(cont) {
 
     <label>Año</label>
     <select id="filtroAnio"></select>
-
-    <div id="resumenTotales" style="display:flex; gap:10px; margin:15px 0;"></div>
+    
+    <div id="resumenTotales" style="
+     display:grid;
+     grid-template-columns:1fr 1fr;
+     gap:10px;
+     margin:15px 0;
+   ">
 
     <canvas id="grafica"></canvas>
   `;
