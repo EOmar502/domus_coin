@@ -146,8 +146,8 @@ function renderEnergia(cont) {
   `;
 
   // cálculo automático
-  document.getElementById('lectura_actual').addEventListener('input', calcularConsumoEnergia);
-  document.getElementById('lectura_anterior').addEventListener('input', calcularConsumoEnergia);
+  document.getElementById('lectura_actual_energia').addEventListener('input', calcularConsumoEnergia);
+  document.getElementById('lectura_anterior_energia').addEventListener('input', calcularConsumoEnergia);
 }
 
 function calcularConsumoEnergia() {
@@ -256,8 +256,8 @@ function renderGas(cont) {
   `;
 
   // cálculo automático
-  document.getElementById('lectura_actual').addEventListener('input', calcularConsumoGas);
-  document.getElementById('lectura_anterior').addEventListener('input', calcularConsumoGas);
+  document.getElementById('lectura_actual_gas').addEventListener('input', calcularConsumoGas);
+  document.getElementById('lectura_anterior_gas').addEventListener('input', calcularConsumoGas);
 }
 
 function calcularConsumoGas() {
@@ -601,27 +601,28 @@ function verDetalle(tipo) {
 // Generico agua/energia/gas
 async function renderDetalle(tabla, tipo, campo, unidad) {
 
-const { data } = await supabaseClient
-  .from(tabla)
-  .select(`${campo}, gastos(fecha,total)`);
+  const { data } = await supabaseClient
+    .from(tabla)
+    .select(`${campo}, gastos(fecha,total)`);
 
 // ✅ FILTRO POR AÑO
-const anio = document.getElementById('filtroAnio')?.value;
-
-const filtrados = data.filter(d =>
-  new Date(d.gastos.fecha + 'T00:00:00-06:00').getFullYear() == anio
+//const anio = document.getElementById('filtroAnio')?.value;
+  const anio = anioSeleccionado;
+  
+  const filtrados = data.filter(d =>
+    new Date(d.gastos.fecha + 'T00:00:00-06:00').getFullYear() == anio
 );
 
 // ✅ ORDENAR
-filtrados.sort((a,b)=>
-  new Date(a.gastos.fecha + 'T00:00:00-06:00') -
-  new Date(b.gastos.fecha + 'T00:00:00-06:00')
+  filtrados.sort((a,b)=>
+    new Date(a.gastos.fecha + 'T00:00:00-06:00') -
+    new Date(b.gastos.fecha + 'T00:00:00-06:00')
 );
 
-const labels=[], consumo=[], costo=[];
+  const labels=[], consumo=[], costo=[];
 
 // ✅ usar filtrados
-filtrados.forEach(d=>{
+  filtrados.forEach(d=>{
     const f=new Date(d.gastos.fecha+'T00:00:00-06:00');
     labels.push(f.toLocaleString('es-MX',{month:'short',year:'numeric'}));
     consumo.push(d[campo]);
